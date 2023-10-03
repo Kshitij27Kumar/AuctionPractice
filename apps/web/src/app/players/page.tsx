@@ -14,6 +14,12 @@ import {
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
+import {
+    addPlayer,
+    deletePlayer,
+    getPlayers,
+    updatePlayer,
+} from '../../services/player'
 
 const { Search } = Input
 
@@ -42,7 +48,7 @@ class TestPlayerService extends PlayerService {
     }
 }
 
-const playerService = new TestPlayerService()
+// const playerService = new TestPlayerService()
 
 const Players = () => {
     const [drawerState, setDrawerState] = useState<DrawerState>({
@@ -53,7 +59,7 @@ const Players = () => {
     const [form] = Form.useForm()
 
     const refreshPlayers = async () => {
-        const players = await playerService.getPlayers()
+        const players = await getPlayers()
         setPlayers(players)
     }
 
@@ -76,18 +82,18 @@ const Players = () => {
     }
 
     const handleDeletePlayer = async (id: number) => {
-        await playerService.deletePlayer(id)
+        await deletePlayer(id)
         refreshPlayers()
     }
 
     const addPlayerSubmit = async (player: Player) => {
-        await playerService.addPlayer(player)
+        await addPlayer(player)
         refreshPlayers()
         resetDrawerState()
     }
 
     const editPlayerSubmit = async (player: Player) => {
-        await playerService.updatePlayer(drawerState.playerId!, player)
+        await updatePlayer(drawerState.playerId!, player)
         refreshPlayers()
         resetDrawerState()
     }

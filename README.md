@@ -1,4 +1,3 @@
 ###### TODOs
 
-[] Fix tests for Players API
-[] Use Player API in the Players page
+auctions - web - pages - api - request/response - domain - repositries - services - types
