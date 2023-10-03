@@ -15,7 +15,7 @@ export class PlayerService {
         return this.playersList.getAll()
     }
 
-    public getOnePlayer = (id: number): Promise<Player> => {
+    public getOnePlayer = (id: number): Promise<Player & Entity> => {
         return this.playersList.getOne(id)
     }
 
