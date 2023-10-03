@@ -4,6 +4,8 @@ import express, { Request, Response } from 'express'
 const app = express()
 const PORT = 3001
 
+app.use(express.json())
+
 const playerService = new PlayerService()
 
 app.get('/', (request: Request, response: Response) => {
@@ -17,23 +19,49 @@ app.get('/players', async (request: Request, response: Response) => {
 
 app.get('/players/:id', async (request: Request, response: Response) => {
     const { id } = request.params
-    const player: Player & Entity = await playerService.getOnePlayer(Number(id))
 
-    if (Number(id) === player.id) {
+    try {
+        const player: Player & Entity = await playerService.getOnePlayer(
+            Number(id)
+        )
         response.status(200).json(player)
-        return
+    } catch (error) {
+        response.status(404).json({ error })
     }
-
-    response.status(404).json({})
 })
 
-let idCounter = 0
-app.post('/players', (request: Request, response: Response) => {
-    const player = {
-        id: ++idCounter,
-        ...request.body,
+app.post('/players', async (request: Request, response: Response) => {
+    try {
+        const playerId = await playerService.addPlayer(request.body)
+        const player = await playerService.getOnePlayer(playerId)
+        response.status(201).json(player)
+    } catch (error) {
+        response.status(404).json({ error })
     }
-    response.status(201).json(player)
+})
+
+app.delete('/players/:id', async (request: Request, response: Response) => {
+    try {
+        const playerId = Number(request.params.id)
+        await playerService.deletePlayer(playerId)
+        response.status(204).send()
+    } catch (error) {
+        response.status(404).json({ error })
+    }
+})
+
+app.patch('/players/:id', async (request: Request, response: Response) => {
+    try {
+        const playerId = Number(request.params.id)
+        const oldPlayer = await playerService.getOnePlayer(playerId)
+        await playerService.updatePlayer(playerId, {
+            ...oldPlayer,
+            ...request.body,
+        })
+        response.status(200).send()
+    } catch (error) {
+        response.status(404).json({ error })
+    }
 })
 
 app.listen(PORT, () => {
