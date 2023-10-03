@@ -12,8 +12,8 @@ import {
     Form,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { Entity, ObjectId } from '@/shared'
-import { Team, TeamService } from '@/teams'
+import { Entity, ObjectId } from 'domains'
+import { Team, TeamService } from 'domains'
 
 const { Search } = Input
 

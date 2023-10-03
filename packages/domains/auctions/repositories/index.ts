@@ -1,4 +1,4 @@
-import { Repository } from '@/shared'
+import { Repository } from '../../shared'
 import { Auction } from '..'
 import { BiddingSessionList } from './bidding-session'
 import { ParticipatingPlayerList } from './participating-player'

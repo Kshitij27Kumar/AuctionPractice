@@ -7,7 +7,7 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "test": "jest --coverage"
+        "test": "playwright test --ui"
     },
     "dependencies": {
         "@types/node": "20.6.2",

@@ -1,6 +1,6 @@
 import { Season, SeasonService } from '..'
-import { Team, TeamService } from '@/teams'
-import { PlayerService, Player } from '@/players'
+import { Team, TeamService } from '../../teams'
+import { PlayerService, Player } from '../../players'
 
 describe('Season Service', () => {
     var seasonService: SeasonService

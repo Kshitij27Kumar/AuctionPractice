@@ -1,6 +1,6 @@
 'use client'
-import { Player, PlayerService } from '@/players'
-import { Entity, ObjectId } from '@/shared'
+import { Player, PlayerService } from 'domains'
+import { Entity, ObjectId } from 'domains'
 import {
     Button,
     Col,

@@ -1,4 +1,4 @@
-import { Player, PlayerService } from '@/players'
+import { Player, PlayerService } from '../../players'
 
 describe('Player Service', () => {
     var playerService: PlayerService

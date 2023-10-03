@@ -1,5 +1,5 @@
-import { Entity, Repository } from '@/shared'
-import { BiddingSession, SessionStatus } from '@/auctions'
+import { Entity, Repository } from '../../shared'
+import { BiddingSession, SessionStatus } from '../shared/types'
 
 type FilterOptions = {
     auctionId?: number

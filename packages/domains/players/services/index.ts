@@ -1,5 +1,5 @@
-import { Player, PlayerList } from '@/players'
-import { Entity } from '@/shared'
+import { Player, PlayerList } from '../../players'
+import { Entity } from '../../shared'
 
 export class PlayerService {
     /**

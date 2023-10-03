@@ -15,8 +15,8 @@ import {
 import Search from 'antd/es/input/Search'
 import { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
-import { Season, SeasonService } from '@/seasons'
-import { Entity, ObjectId } from '@/shared'
+import { Season, SeasonService } from 'domains'
+import { Entity, ObjectId } from 'domains'
 
 type DrawerState = {
     isDrawerOpen: boolean

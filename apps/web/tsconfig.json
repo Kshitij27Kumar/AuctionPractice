@@ -17,15 +17,7 @@
             {
                 "name": "next"
             }
-        ],
-        "baseUrl": "src",
-        "paths": {
-            "@/seasons": ["domain/seasons"],
-            "@/auctions": ["domain/auctions"],
-            "@/players": ["domain/players"],
-            "@/teams": ["domain/teams"],
-            "@/shared": ["domain/shared"]
-        }
+        ]
     },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
     "exclude": ["node_modules"]

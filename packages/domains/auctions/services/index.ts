@@ -8,8 +8,8 @@ import {
     BiddingSessionList,
     BiddingSession,
     SessionStatus,
-} from '@/auctions'
-import { Entity } from '@/shared'
+} from '../../auctions'
+import { Entity } from '../../shared'
 
 export class AuctionService {
     /**

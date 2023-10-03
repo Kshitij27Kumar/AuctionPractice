@@ -1,4 +1,4 @@
-import { Entity } from '@/shared'
+import { Entity } from '../../shared'
 import { Team, TeamList } from '..'
 
 export class TeamService {

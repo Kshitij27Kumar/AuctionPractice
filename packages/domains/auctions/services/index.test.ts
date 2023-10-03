@@ -1,6 +1,6 @@
 import { CreateTierDTO, Auction, AuctionService } from '..'
-import { Player, PlayerService } from '@/players'
-import { SeasonService, Season } from '@/seasons'
+import { Player, PlayerService } from '../../players'
+import { SeasonService, Season } from '../../seasons'
 
 describe('Auction Service', () => {
     var auctionService: AuctionService

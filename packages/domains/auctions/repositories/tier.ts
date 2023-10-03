@@ -1,4 +1,4 @@
-import { Entity, Repository } from '@/shared'
+import { Entity, Repository } from '../../shared'
 import { Tier } from '..'
 
 type FilterOptions = {

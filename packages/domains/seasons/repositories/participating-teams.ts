@@ -1,4 +1,4 @@
-import { Repository, Entity } from '@/shared'
+import { Repository, Entity } from '../../shared'
 import { ParticipatingTeam } from '..'
 
 type FilterOptions = {
