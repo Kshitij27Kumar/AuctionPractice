@@ -97,8 +97,6 @@ describe('Seasons', () => {
         const rows = await Promise.all(await rowPromises)
         const rowContent = await Promise.all(rows.map(getRowContent))
 
-        console.log('Row content:', rowContent)
-
         //Then
         expect(rowContent).toHaveLength(3)
         expect(rowContent).toEqual(expectedRows)

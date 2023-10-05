@@ -1,5 +1,5 @@
+import { Alert, Button, Col, Drawer, Form, Input, Row, Space } from 'antd'
 import { Entity, ObjectId, Player } from 'domains'
-import PlayerList from './list'
 import React, { useEffect, useState } from 'react'
 import {
     addPlayer,
@@ -7,7 +7,7 @@ import {
     getPlayers,
     updatePlayer,
 } from '../../../services/player'
-import { Form, Row, Col, Button, Drawer, Input, Space } from 'antd'
+import PlayerList from './list'
 
 type DrawerState = {
     isDrawerOpen: boolean
@@ -22,6 +22,7 @@ const Root = () => {
         isDrawerOpen: false,
     })
     const [players, setPlayers] = useState<(Player & Entity)[]>([])
+    const [error, setError] = useState(false)
     const [form] = Form.useForm()
 
     const resetDrawerState = () => {
@@ -29,8 +30,14 @@ const Root = () => {
     }
 
     const refreshPlayers = async () => {
-        const players = await getPlayers()
-        setPlayers(players)
+        try {
+            const players = await getPlayers()
+            setPlayers(players)
+            setError(false)
+        } catch (error) {
+            setError(true)
+            setPlayers([])
+        }
     }
 
     const onDeleteClick = async (id: number) => {
@@ -59,9 +66,14 @@ const Root = () => {
     }
 
     const addPlayerSubmit = async (player: Player) => {
-        await addPlayer(player)
-        refreshPlayers()
-        resetDrawerState()
+        try {
+            await addPlayer(player)
+            refreshPlayers()
+            resetDrawerState()
+            setError(false)
+        } catch (error) {
+            setError(true)
+        }
     }
 
     useEffect(() => {
@@ -99,11 +111,23 @@ const Root = () => {
                     </Button>
                 </Col>
             </Row>
+
+            {error && (
+                <Alert
+                    data-testid="player-error"
+                    message="Error"
+                    description="Something went wrong. Please try again."
+                    type="error"
+                    showIcon={true}
+                />
+            )}
+
             <PlayerList
                 players={players}
                 handleDelete={onDeleteClick}
                 handleEdit={onEditClick}
             />
+
             <Drawer
                 data-testid="add-player-drawer"
                 title={drawerState.playerId ? 'Edit Player' : 'Add Player'}

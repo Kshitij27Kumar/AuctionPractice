@@ -44,6 +44,7 @@ describe('Player List', () => {
         const table = screen.getByRole('table')
         const rows = table.getElementsByTagName('tr')
         const rowContent = Array.from(rows)[1].textContent
+
         // Then
         expect(rowContent).toEqual('No data')
     })

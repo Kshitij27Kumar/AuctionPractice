@@ -1,11 +1,8 @@
 import { test, expect, Locator } from '@playwright/test'
+import { Entity, Player } from 'domains'
 const { describe, beforeEach } = test
 
 describe('Players', () => {
-    beforeEach(async ({ page }) => {
-        await page.goto('http://localhost:3000/players')
-    })
-
     const getRowContent = async (row: Locator) => {
         const cellLocators = await row.getByRole('cell').all()
         const cells = await Promise.all(cellLocators)
@@ -16,6 +13,7 @@ describe('Players', () => {
 
     test('Should have the correct title', async ({ page }) => {
         // Given
+        await page.goto('http://localhost:3000/players')
 
         // Then
         await expect(page).toHaveTitle('Players')
@@ -23,6 +21,7 @@ describe('Players', () => {
 
     test('Should have only one search bar at the top', async ({ page }) => {
         // Given
+        await page.goto('http://localhost:3000/players')
 
         // When
         const searchBars = await page.getByPlaceholder('Search Player').all()
@@ -34,6 +33,7 @@ describe('Players', () => {
 
     test('should have an add button', async ({ page }) => {
         // Given
+        await page.goto('http://localhost:3000/players')
 
         // When
         const addButton = page.getByRole('button', { name: 'Add Player' })
@@ -43,6 +43,9 @@ describe('Players', () => {
     })
 
     test('Should have a players table', async ({ page }) => {
+        // Given
+        await page.goto('http://localhost:3000/players')
+
         // When
         const table = page.getByTestId('players-table')
 
@@ -54,6 +57,8 @@ describe('Players', () => {
         page,
     }) => {
         // Given
+        await page.goto('http://localhost:3000/players')
+
         const expectedHeaders = [
             'Id',
             'First Name',
@@ -74,15 +79,24 @@ describe('Players', () => {
         expect(columnHeadersContent).toEqual(expectedHeaders)
     })
 
-    test('Should have some initial player data on load', async ({ page }) => {
+    test('Should display an empty table when there is no data', async ({
+        page,
+    }) => {
         // Given
-        const expectedRows = [
-            [],
-            ['1', 'Rohit', 'Sharma', 'INDIA', 'EditDelete'],
-            ['2', 'Matthew', 'Wade', 'AUSTRALIA', 'EditDelete'],
-        ]
+        await page.route('**/*/api/players', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                json: [],
+            })
+        })
+
+        await page.goto('http://localhost:3000/players')
+
+        const expectedRows = [[], ['No data']]
+
         await page.waitForSelector(
-            '[data-testid=players-table] td:nth-of-type(2)'
+            '[data-testid=players-table] td:nth-of-type(1)'
         )
 
         // When
@@ -94,17 +108,80 @@ describe('Players', () => {
         const rows = await Promise.all(await rowPromises)
         const rowContent = await Promise.all(rows.map(getRowContent))
 
-        console.log('Row content:', rowContent)
+        // Then
+        expect(rowContent).toHaveLength(expectedRows.length)
+        expect(rowContent).toEqual(expectedRows)
+    })
+
+    test('Should display data in the table ', async ({ page }) => {
+        // Given
+        const players: (Player & Entity)[] = [
+            {
+                id: 1,
+                firstName: 'Rohit',
+                lastName: 'Sharma',
+                country: 'India',
+            },
+        ]
+
+        await page.route('**/*/api/players', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                json: players,
+            })
+        })
+
+        await page.goto('http://localhost:3000/players')
+
+        const expectedRows = [
+            [],
+            ['1', 'Rohit', 'Sharma', 'INDIA', 'EditDelete'],
+        ]
+
+        await page.waitForSelector(
+            '[data-testid=players-table] td:nth-of-type(1)'
+        )
+
+        // When
+        const rowPromises = page
+            .getByTestId('players-table')
+            .getByRole('row')
+            .all()
+
+        const rows = await Promise.all(await rowPromises)
+        const rowContent = await Promise.all(rows.map(getRowContent))
 
         // Then
         expect(rowContent).toHaveLength(expectedRows.length)
         expect(rowContent).toEqual(expectedRows)
     })
 
+    test('should display an alert when server is unavailable', async ({
+        page,
+    }) => {
+        // Given
+        await page.route('**/*/api/players', async (route) => {
+            await route.fulfill({ status: 500 })
+        })
+
+        await page.goto('http://localhost:3000/players')
+
+        // When
+        const notification = page.getByTestId('player-error')
+        const text = await notification.textContent()
+
+        // Then
+        await expect(notification).toBeVisible()
+        expect(text).toEqual('ErrorSomething went wrong. Please try again.')
+    })
+
     test('should open a drawer when the add player button is clicked', async ({
         page,
     }) => {
         // Given
+        await page.goto('http://localhost:3000/players')
+
         const addPlayerButton = page.getByRole('button', { name: 'Add Player' })
         const playerDrawer = page.getByTestId('add-player-drawer')
 
@@ -119,6 +196,8 @@ describe('Players', () => {
         page,
     }) => {
         // Given
+        await page.goto('http://localhost:3000/players')
+
         const addPlayerButton = page.getByRole('button', { name: 'Add Player' })
         const form = page.getByTitle('player-form')
         const firstName = page.getByPlaceholder('Please enter first name')
@@ -142,6 +221,24 @@ describe('Players', () => {
         page,
     }) => {
         // Given
+        const players: (Player & Entity)[] = [
+            {
+                id: 1,
+                firstName: 'Dale',
+                lastName: 'Steyn',
+                country: 'South Africa',
+            },
+        ]
+        await page.route('**/*/api/players', async (route, request) => {
+            if (request.method() == 'POST') {
+                await route.fulfill({ status: 201, json: players })
+            } else if (request.method() == 'GET') {
+                await route.fulfill({ status: 200, json: players })
+            }
+        })
+
+        await page.goto('http://localhost:3000/players')
+
         const addPlayerButton = page.getByRole('button', { name: 'Add Player' })
         const form = page.getByTitle('player-form')
         const firstName = form.getByPlaceholder('Please enter first name')
@@ -151,9 +248,7 @@ describe('Players', () => {
 
         const expectedRows = [
             [],
-            ['1', 'Rohit', 'Sharma', 'INDIA', 'EditDelete'],
-            ['2', 'Matthew', 'Wade', 'AUSTRALIA', 'EditDelete'],
-            ['3', 'Dale', 'Steyn', 'SOUTH AFRICA', 'EditDelete'],
+            ['1', 'Dale', 'Steyn', 'SOUTH AFRICA', 'EditDelete'],
         ]
 
         // When
@@ -172,25 +267,88 @@ describe('Players', () => {
         const rowContent = await Promise.all(rows.map(getRowContent))
 
         // Then
-        expect(rowContent).toHaveLength(4)
+        expect(rowContent).toHaveLength(expectedRows.length)
         expect(rowContent).toEqual(expectedRows)
+    })
+
+    test('should not be able to add a player when there are missing properties', async ({
+        page,
+    }) => {
+        // Given
+        await page.route('**/*/api/players', async (route, request) => {
+            const error = {
+                message: 'invalid input',
+            }
+            if (request.method() == 'POST') {
+                await route.fulfill({ status: 400, json: error })
+            }
+            // else if (request.method() == 'GET') {
+            //     await route.fulfill({ status: 200, json: players })
+            // }
+        })
+
+        await page.goto('http://localhost:3000/players')
+
+        const addPlayerButton = page.getByRole('button', { name: 'Add Player' })
+        const form = page.getByTitle('player-form')
+        const firstName = form.getByPlaceholder('Please enter first name')
+        const lastName = form.getByPlaceholder('Please enter last name')
+        const country = form.getByRole('combobox')
+        const submit = form.getByRole('button', { name: 'Submit' })
+
+        // When
+        await addPlayerButton.click()
+        await firstName.fill('Dale')
+        await lastName.fill('Steyn')
+        await country.selectOption('south africa')
+        await submit.click()
+
+        // When
+        const notification = page.getByTestId('player-error')
+        const text = await notification.textContent()
+
+        // Then
+        await expect(notification).toBeVisible()
+        expect(text).toEqual('ErrorSomething went wrong. Please try again.')
     })
 
     test('should show a confirmation popup on clicking delete button', async ({
         page,
     }) => {
         // Given
+        const players: (Player & Entity)[] = [
+            {
+                id: 1,
+                firstName: 'Rohit',
+                lastName: 'Sharma',
+                country: 'India',
+            },
+        ]
+
+        await page.route('**/*/api/players', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                json: players,
+            })
+        })
+
+        await page.goto('http://localhost:3000/players')
+
         await page.waitForSelector(
-            '[data-testid=players-table] td:nth-of-type(2)'
+            '[data-testid=players-table] td:nth-of-type(1)'
         )
+
         const deleteButtons = await page
             .getByRole('button', {
                 name: 'Delete',
             })
             .all()
+
         const deletePopUp = page.getByRole('tooltip', {
             name: 'Are you sure?',
         })
+
         // When
         await deleteButtons[0].click({ timeout: 500 })
 
@@ -202,13 +360,56 @@ describe('Players', () => {
         page,
     }) => {
         // Given
+        const players: (Player & Entity)[] = [
+            {
+                id: 1,
+                firstName: 'Rohit',
+                lastName: 'Sharma',
+                country: 'India',
+            },
+            {
+                id: 2,
+                firstName: 'MS',
+                lastName: 'Dhoni',
+                country: 'India',
+            },
+        ]
+
+        let requestNumber = 0
+
+        await page.route('**/*/api/players', async (route) => {
+            if (requestNumber === 0) {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    json: players,
+                })
+            } else if (requestNumber === 1) {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    json: [players[0]],
+                })
+            }
+        })
+
+        await page.route('**/*/api/players/*', async (route, request) => {
+            if (request.method() === 'DELETE') {
+                await route.fulfill({
+                    status: 204,
+                })
+            }
+        })
+
+        await page.goto('http://localhost:3000/players')
+
         await page.waitForSelector(
             '[data-testid=players-table] td:nth-of-type(2)'
         )
+
         const expectedRows = [
             [],
             ['1', 'Rohit', 'Sharma', 'INDIA', 'EditDelete'],
-            // ['2', 'Matthew', 'Wade', 'AUSTRALIA', 'EditDelete'],
         ]
 
         const deleteButtons = await page
@@ -223,6 +424,7 @@ describe('Players', () => {
             .getByRole('button', { name: 'OK' })
 
         // When
+        requestNumber++
         await deleteButtons[1].click({ timeout: 500 })
         await deleteConfirmationButton.click()
 
@@ -241,9 +443,58 @@ describe('Players', () => {
         page,
     }) => {
         // Given
+        const players: (Player & Entity)[] = [
+            {
+                id: 1,
+                firstName: 'Rohit',
+                lastName: 'Sharma',
+                country: 'India',
+            },
+        ]
+
+        const updatedPlayer = [
+            {
+                id: 1,
+                firstName: 'Rohit',
+                lastName: 'Verma',
+                country: 'India',
+            },
+        ]
+
+        let requestNumber = 0
+
+        await page.route('**/*/api/players', async (route) => {
+            if (requestNumber === 0) {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    json: players,
+                })
+            } else if (requestNumber === 1) {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    json: updatedPlayer,
+                })
+            }
+        })
+
+        await page.route('**/*/api/players/*', async (route, request) => {
+            if (request.method() === 'PATCH') {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    json: updatedPlayer,
+                })
+            }
+        })
+
+        await page.goto('http://localhost:3000/players')
+
         await page.waitForSelector(
-            '[data-testid=players-table] td:nth-of-type(2)'
+            '[data-testid=players-table] td:nth-of-type(1)'
         )
+
         const form = page.getByTitle('player-form')
         const firstName = form.getByPlaceholder('Please enter first name')
         const lastName = form.getByPlaceholder('Please enter last name')
@@ -252,8 +503,7 @@ describe('Players', () => {
 
         const expectedRows = [
             [],
-            ['1', 'Rohit', 'Sharma', 'INDIA', 'EditDelete'],
-            ['2', 'MS', 'Dhoni', 'INDIA', 'EditDelete'],
+            ['1', 'Rohit', 'Verma', 'INDIA', 'EditDelete'],
         ]
 
         const editButtons = await page
@@ -262,16 +512,17 @@ describe('Players', () => {
             })
             .all()
 
-        await editButtons[1].click()
+        await editButtons[0].click()
 
         await firstName.click()
-        await firstName.fill('MS')
+        await firstName.fill('Rohit')
 
         await lastName.click()
-        await lastName.fill('Dhoni')
+        await lastName.fill('Verma')
 
         await country.selectOption('india')
 
+        requestNumber++
         await submit.click()
 
         const rowPromises = page
@@ -288,55 +539,55 @@ describe('Players', () => {
         expect(rowContent).toEqual(expectedRows)
     })
 
-    test('should delete the newly added player', async ({ page }) => {
-        // Given
-        await page.waitForSelector(
-            '[data-testid=players-table] td:nth-of-type(2)'
-        )
-        const addPlayerButton = page.getByRole('button', { name: 'Add Player' })
-        const form = page.getByTitle('player-form')
-        const firstName = form.getByPlaceholder('Please enter first name')
-        const lastName = form.getByPlaceholder('Please enter last name')
-        const country = form.getByRole('combobox')
-        const submit = form.getByRole('button', { name: 'Submit' })
+    // test('should delete the newly added player', async ({ page }) => {
+    //     // Given
+    //     await page.waitForSelector(
+    //         '[data-testid=players-table] td:nth-of-type(2)'
+    //     )
+    //     const addPlayerButton = page.getByRole('button', { name: 'Add Player' })
+    //     const form = page.getByTitle('player-form')
+    //     const firstName = form.getByPlaceholder('Please enter first name')
+    //     const lastName = form.getByPlaceholder('Please enter last name')
+    //     const country = form.getByRole('combobox')
+    //     const submit = form.getByRole('button', { name: 'Submit' })
 
-        const expectedRows = [
-            [],
-            ['1', 'Rohit', 'Sharma', 'INDIA', 'EditDelete'],
-            ['2', 'Matthew', 'Wade', 'AUSTRALIA', 'EditDelete'],
-            // ['3', 'Dale', 'Steyn', 'SOUTH AFRICA', 'EditDelete'],
-        ]
+    //     const expectedRows = [
+    //         [],
+    //         ['1', 'Rohit', 'Sharma', 'INDIA', 'EditDelete'],
+    //         ['2', 'Matthew', 'Wade', 'AUSTRALIA', 'EditDelete'],
+    //         // ['3', 'Dale', 'Steyn', 'SOUTH AFRICA', 'EditDelete'],
+    //     ]
 
-        // When
-        await addPlayerButton.click()
-        await firstName.fill('Dale')
-        await lastName.fill('Steyn')
-        await country.selectOption('south africa')
-        await submit.click()
+    //     // When
+    //     await addPlayerButton.click()
+    //     await firstName.fill('Dale')
+    //     await lastName.fill('Steyn')
+    //     await country.selectOption('south africa')
+    //     await submit.click()
 
-        const deleteButtons = await page
-            .getByRole('button', {
-                name: 'Delete',
-            })
-            .all()
-        const deleteConfirmationButton = page
-            .getByRole('tooltip', {
-                name: 'Are you sure?',
-            })
-            .getByRole('button', { name: 'OK' })
+    //     const deleteButtons = await page
+    //         .getByRole('button', {
+    //             name: 'Delete',
+    //         })
+    //         .all()
+    //     const deleteConfirmationButton = page
+    //         .getByRole('tooltip', {
+    //             name: 'Are you sure?',
+    //         })
+    //         .getByRole('button', { name: 'OK' })
 
-        // When
-        await deleteButtons[2].click({ timeout: 500 })
-        await deleteConfirmationButton.click()
+    //     // When
+    //     await deleteButtons[2].click({ timeout: 500 })
+    //     await deleteConfirmationButton.click()
 
-        const rowPromises = page
-            .getByTestId('players-table')
-            .getByRole('row')
-            .all()
-        const rows = await Promise.all(await rowPromises)
-        const rowContent = await Promise.all(rows.map(getRowContent))
+    //     const rowPromises = page
+    //         .getByTestId('players-table')
+    //         .getByRole('row')
+    //         .all()
+    //     const rows = await Promise.all(await rowPromises)
+    //     const rowContent = await Promise.all(rows.map(getRowContent))
 
-        // Then
-        expect(rowContent).toEqual(expectedRows)
-    })
+    //     // Then
+    //     expect(rowContent).toEqual(expectedRows)
+    // })
 })
