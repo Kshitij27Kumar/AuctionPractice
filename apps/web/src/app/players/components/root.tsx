@@ -8,6 +8,7 @@ import {
     updatePlayer,
 } from '../../../services/player'
 import PlayerList from './list'
+import PlayerForm from './form'
 
 type DrawerState = {
     isDrawerOpen: boolean
@@ -23,7 +24,6 @@ const Root = () => {
     })
     const [players, setPlayers] = useState<(Player & Entity)[]>([])
     const [error, setError] = useState(false)
-    const [form] = Form.useForm()
 
     const resetDrawerState = () => {
         setDrawerState({ isDrawerOpen: false })
@@ -59,23 +59,6 @@ const Root = () => {
         })
     }
 
-    const editPlayerSubmit = async (player: Player) => {
-        await updatePlayer(drawerState.playerId!, player)
-        refreshPlayers()
-        resetDrawerState()
-    }
-
-    const addPlayerSubmit = async (player: Player) => {
-        try {
-            await addPlayer(player)
-            refreshPlayers()
-            resetDrawerState()
-            setError(false)
-        } catch (error) {
-            setError(true)
-        }
-    }
-
     useEffect(() => {
         refreshPlayers()
     }, [])
@@ -90,12 +73,6 @@ const Root = () => {
 
         if (playerId) {
             player = players.find(({ id }: Entity) => id === playerId)
-        }
-
-        if (player) {
-            form.setFieldsValue(player)
-        } else {
-            form.resetFields()
         }
     }
 
@@ -127,6 +104,7 @@ const Root = () => {
                 handleDelete={onDeleteClick}
                 handleEdit={onEditClick}
             />
+            {/* <PlayerList defaultPlayers={players} onChange={}/> */}
 
             <Drawer
                 data-testid="add-player-drawer"
@@ -135,77 +113,7 @@ const Root = () => {
                 open={drawerState.isDrawerOpen}
                 onClose={resetDrawerState}
             >
-                <Form
-                    title="player-form"
-                    form={form}
-                    onFinish={(player: Player) => {
-                        drawerState.playerId
-                            ? editPlayerSubmit(player)
-                            : addPlayerSubmit(player)
-                    }}
-                >
-                    <Form.Item
-                        name="firstName"
-                        label="First Name"
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Please enter first name',
-                            },
-                            {
-                                pattern: /^[a-z\s]+$/i,
-                                message: 'First name is invalid',
-                            },
-                        ]}
-                    >
-                        <Input placeholder="Please enter first name" />
-                    </Form.Item>
-                    <Form.Item
-                        name="lastName"
-                        label="Last Name"
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Please enter last name',
-                            },
-                            {
-                                pattern: /^[a-z\s]+$/i,
-                                message: 'Last name is invalid',
-                            },
-                        ]}
-                    >
-                        <Input placeholder="Please enter last name" />
-                    </Form.Item>
-                    <Form.Item
-                        name="country"
-                        label="Country"
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Please select a country',
-                            },
-                        ]}
-                    >
-                        <select className="ant-col ant-form-item-control ant-form-item-control-input ant-form-item-control-input-content">
-                            <option selected>-- select an option --</option>
-                            <option value={'india'}>India</option>
-                            <option value={'australia'}>Australia</option>
-                            <option value={'england'}>England</option>
-                            <option value={'sri lanka'}>Sri Lanka</option>
-                            <option value={'west indies'}>West Indies</option>
-                            <option value={'afghanistan'}>Afghanistan</option>
-                            <option value={'new zealand'}>New Zealand</option>
-                            <option value={'bangladesh'}>Bangladesh</option>
-                            <option value={'south africa'}>South Africa</option>
-                        </select>
-                    </Form.Item>
-                    <Space>
-                        <Button type="primary" htmlType="submit">
-                            Submit
-                        </Button>
-                        <Button htmlType="reset">Reset</Button>
-                    </Space>
-                </Form>
+                <PlayerForm addPlayer={addPlayer} updatePlayer={updatePlayer} />
             </Drawer>
         </>
     )

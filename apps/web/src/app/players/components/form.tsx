@@ -1,0 +1,130 @@
+import { Form, Input, Space, Button } from 'antd'
+import { Entity, ObjectId, Player } from 'domains'
+import { useEffect } from 'react'
+
+interface PlayerFormProps {
+    defaultPlayer?: Player & Entity
+    onFinish?: (player: Player) => void
+    addPlayer(player: Player): Promise<Player & Entity>
+    updatePlayer(id: ObjectId, player: Player): Promise<Player & Entity>
+}
+
+const PlayerForm = ({
+    defaultPlayer,
+    onFinish,
+    addPlayer,
+    updatePlayer,
+}: PlayerFormProps) => {
+    const [form] = Form.useForm()
+
+    const setFormFields = (player: (Player & Entity) | undefined) => {
+        if (player) {
+            form.setFieldsValue(player)
+        } else {
+            form.resetFields()
+        }
+    }
+
+    const addPlayerSubmit = async (player: Player) => {
+        const newPlayer = await addPlayer(player)
+        if (onFinish) {
+            onFinish(newPlayer)
+        }
+    }
+
+    const editPlayerSubmit = async (player: Player) => {
+        const editedPlayer = await updatePlayer(defaultPlayer!.id, player)
+        if (onFinish) {
+            onFinish(editedPlayer)
+        }
+    }
+
+    useEffect(() => {
+        setFormFields(defaultPlayer)
+    }, [])
+
+    return (
+        <Form
+            title="player-form"
+            form={form}
+            onFinish={(player: Player) => {
+                defaultPlayer?.id
+                    ? editPlayerSubmit(player)
+                    : addPlayerSubmit(player)
+            }}
+        >
+            <Form.Item
+                name="firstName"
+                label="First Name"
+                rules={[
+                    {
+                        required: true,
+                        message: 'Please enter first name',
+                    },
+                    {
+                        pattern: /^[a-z\s]+$/i,
+                        message: 'First name is invalid',
+                    },
+                ]}
+            >
+                <Input
+                    placeholder="Please enter first name"
+                    data-testid="player-firstname-input"
+                />
+            </Form.Item>
+            <Form.Item
+                name="lastName"
+                label="Last Name"
+                rules={[
+                    {
+                        required: true,
+                        message: 'Please enter last name',
+                    },
+                    {
+                        pattern: /^[a-z\s]+$/i,
+                        message: 'Last name is invalid',
+                    },
+                ]}
+            >
+                <Input
+                    placeholder="Please enter last name"
+                    data-testid="player-lastname-input"
+                />
+            </Form.Item>
+            <Form.Item
+                name="country"
+                label="Country"
+                rules={[
+                    {
+                        required: true,
+                        message: 'Please select a country',
+                    },
+                ]}
+            >
+                <select
+                    className="ant-col ant-form-item-control ant-form-item-control-input ant-form-item-control-input-content"
+                    data-testid="player-country-select"
+                >
+                    <option selected>-- select an option --</option>
+                    <option value={'india'}>India</option>
+                    <option value={'australia'}>Australia</option>
+                    <option value={'england'}>England</option>
+                    <option value={'sri lanka'}>Sri Lanka</option>
+                    <option value={'west indies'}>West Indies</option>
+                    <option value={'afghanistan'}>Afghanistan</option>
+                    <option value={'new zealand'}>New Zealand</option>
+                    <option value={'bangladesh'}>Bangladesh</option>
+                    <option value={'south africa'}>South Africa</option>
+                </select>
+            </Form.Item>
+            <Space>
+                <Button type="primary" htmlType="submit">
+                    Submit
+                </Button>
+                <Button htmlType="reset">Reset</Button>
+            </Space>
+        </Form>
+    )
+}
+
+export default PlayerForm

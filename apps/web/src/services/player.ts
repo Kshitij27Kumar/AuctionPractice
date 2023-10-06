@@ -32,10 +32,14 @@ export const addPlayer = async (player: Player) => {
             },
             body: JSON.stringify(player),
         })
+        const json = await response.json()
+
         if (response.status == 400) {
-            const errorResponse = await response.json()
+            const errorResponse = json
             throw new Error(errorResponse.message)
         }
+
+        return json
     } catch (error) {
         throw error
     }
@@ -55,4 +59,6 @@ export const updatePlayer = async (id: number, player: Player) => {
         },
         body: JSON.stringify(player),
     })
+    const updatedPlayer = await response.json()
+    return updatedPlayer
 }
