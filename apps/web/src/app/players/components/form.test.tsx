@@ -34,6 +34,7 @@ describe('Player Form', () => {
                 })
             }
         }
+
         // When
         render(<PlayerForm service={new TestPlayerService()} />)
         const firstName = screen.getByTestId('player-firstname-input')
@@ -48,7 +49,32 @@ describe('Player Form', () => {
 
     it('should have empty input fields if no player data is passed', () => {
         // Given
-        render(<PlayerForm />)
+        class TestPlayerService
+            implements AddPlayerService, UpdatePlayerService
+        {
+            public addPlayer(player: Player): Promise<Player & Entity> {
+                return Promise.resolve({
+                    id: 1,
+                    firstName: 'Rohit',
+                    lastName: 'Sharma',
+                    country: 'australia',
+                })
+            }
+
+            public updatePlayer(
+                id: ObjectId,
+                player: Player
+            ): Promise<Player & Entity> {
+                return Promise.resolve({
+                    id: 1,
+                    firstName: 'Rohit',
+                    lastName: 'Sharma',
+                    country: 'india',
+                })
+            }
+        }
+
+        render(<PlayerForm service={new TestPlayerService()} />)
         const firstName: HTMLInputElement = screen.getByTestId(
             'player-firstname-input'
         )
@@ -75,7 +101,38 @@ describe('Player Form', () => {
             lastName: 'Kohli',
             country: 'india',
         }
-        render(<PlayerForm defaultPlayer={player} />)
+
+        class TestPlayerService
+            implements AddPlayerService, UpdatePlayerService
+        {
+            public addPlayer(player: Player): Promise<Player & Entity> {
+                return Promise.resolve({
+                    id: 1,
+                    firstName: 'Rohit',
+                    lastName: 'Sharma',
+                    country: 'australia',
+                })
+            }
+
+            public updatePlayer(
+                id: ObjectId,
+                player: Player
+            ): Promise<Player & Entity> {
+                return Promise.resolve({
+                    id: 1,
+                    firstName: 'Rohit',
+                    lastName: 'Sharma',
+                    country: 'india',
+                })
+            }
+        }
+
+        render(
+            <PlayerForm
+                defaultPlayer={player}
+                service={new TestPlayerService()}
+            />
+        )
 
         const firstName: HTMLInputElement = screen.getByTestId(
             'player-firstname-input'
