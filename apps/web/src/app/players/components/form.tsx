@@ -1,19 +1,21 @@
-import { Form, Input, Space, Button } from 'antd'
-import { Entity, ObjectId, Player } from 'domains'
+import { Button, Form, Input, Space } from 'antd'
+import { Entity, Player } from 'domains'
 import { useEffect } from 'react'
+import { AddPlayerService, UpdatePlayerService } from '../../../services/player'
+import { withPlayerService } from '../../shared/hoc'
 
 interface PlayerFormProps {
     defaultPlayer?: Player & Entity
-    onFinish?: (player: Player) => void
-    addPlayer(player: Player): Promise<Player & Entity>
-    updatePlayer(id: ObjectId, player: Player): Promise<Player & Entity>
+    onSuccess?: (player: Player) => void
+    onFailure?: (error: Error) => void
+    service: AddPlayerService & UpdatePlayerService
 }
 
-const PlayerForm = ({
+export const PlayerForm = ({
     defaultPlayer,
-    onFinish,
-    addPlayer,
-    updatePlayer,
+    onSuccess,
+    onFailure,
+    service,
 }: PlayerFormProps) => {
     const [form] = Form.useForm()
 
@@ -26,16 +28,31 @@ const PlayerForm = ({
     }
 
     const addPlayerSubmit = async (player: Player) => {
-        const newPlayer = await addPlayer(player)
-        if (onFinish) {
-            onFinish(newPlayer)
+        try {
+            const newPlayer = await service.addPlayer(player)
+            if (onSuccess) {
+                onSuccess(newPlayer)
+            }
+        } catch (error) {
+            if (onFailure) {
+                onFailure(error as Error)
+            }
         }
     }
 
     const editPlayerSubmit = async (player: Player) => {
-        const editedPlayer = await updatePlayer(defaultPlayer!.id, player)
-        if (onFinish) {
-            onFinish(editedPlayer)
+        try {
+            const editedPlayer = await service.updatePlayer(
+                defaultPlayer!.id,
+                player
+            )
+            if (onSuccess) {
+                onSuccess(editedPlayer)
+            }
+        } catch (error) {
+            if (onFailure) {
+                onFailure(error as Error)
+            }
         }
     }
 
@@ -46,6 +63,11 @@ const PlayerForm = ({
     return (
         <Form
             title="player-form"
+            initialValues={{
+                firstName: '',
+                lastName: '',
+                country: '',
+            }}
             form={form}
             onFinish={(player: Player) => {
                 defaultPlayer?.id
@@ -105,7 +127,7 @@ const PlayerForm = ({
                     className="ant-col ant-form-item-control ant-form-item-control-input ant-form-item-control-input-content"
                     data-testid="player-country-select"
                 >
-                    <option selected>-- select an option --</option>
+                    <option value="">-- select an option --</option>
                     <option value={'india'}>India</option>
                     <option value={'australia'}>Australia</option>
                     <option value={'england'}>England</option>
@@ -127,4 +149,4 @@ const PlayerForm = ({
     )
 }
 
-export default PlayerForm
+export default withPlayerService(PlayerForm)

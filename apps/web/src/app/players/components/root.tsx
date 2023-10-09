@@ -1,14 +1,13 @@
-import { Alert, Button, Col, Drawer, Form, Input, Row, Space } from 'antd'
+import { Alert, Button, Col, Drawer, Input, Row } from 'antd'
 import { Entity, ObjectId, Player } from 'domains'
-import React, { useEffect, useState } from 'react'
 import {
-    addPlayer,
-    deletePlayer,
-    getPlayers,
-    updatePlayer,
+    DeletePlayerService,
+    GetAllPlayersService,
 } from '../../../services/player'
+import React, { useEffect, useState } from 'react'
 import PlayerList from './list'
 import PlayerForm from './form'
+import { withPlayerService } from '../../shared/hoc'
 
 type DrawerState = {
     isDrawerOpen: boolean
@@ -17,7 +16,11 @@ type DrawerState = {
 
 const { Search } = Input
 
-const Root = () => {
+interface RootProps {
+    service: GetAllPlayersService & DeletePlayerService
+}
+
+const Root = ({ service }: RootProps) => {
     const [drawerState, setDrawerState] = useState<DrawerState>({
         playerId: undefined,
         isDrawerOpen: false,
@@ -31,7 +34,7 @@ const Root = () => {
 
     const refreshPlayers = async () => {
         try {
-            const players = await getPlayers()
+            const players = await service.getPlayers()
             setPlayers(players)
             setError(false)
         } catch (error) {
@@ -41,7 +44,7 @@ const Root = () => {
     }
 
     const onDeleteClick = async (id: number) => {
-        await deletePlayer(id)
+        await service.deletePlayer(id)
         refreshPlayers()
     }
 
@@ -57,6 +60,15 @@ const Root = () => {
             isDrawerOpen: true,
             playerId: undefined,
         })
+    }
+
+    const successHandler = async () => {
+        await refreshPlayers()
+        setError(false)
+    }
+
+    const failureHandler = () => {
+        setError(true)
     }
 
     useEffect(() => {
@@ -113,10 +125,13 @@ const Root = () => {
                 open={drawerState.isDrawerOpen}
                 onClose={resetDrawerState}
             >
-                <PlayerForm addPlayer={addPlayer} updatePlayer={updatePlayer} />
+                <PlayerForm
+                    onSuccess={successHandler}
+                    onFailure={failureHandler}
+                />
             </Drawer>
         </>
     )
 }
 
-export default Root
+export default withPlayerService(Root)

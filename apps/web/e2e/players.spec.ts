@@ -282,9 +282,6 @@ describe('Players', () => {
             if (request.method() == 'POST') {
                 await route.fulfill({ status: 400, json: error })
             }
-            // else if (request.method() == 'GET') {
-            //     await route.fulfill({ status: 200, json: players })
-            // }
         })
 
         await page.goto('http://localhost:3000/players')
