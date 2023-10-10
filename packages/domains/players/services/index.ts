@@ -1,22 +1,26 @@
 import { Player, PlayerList } from '../../players'
-import { Entity } from '../../shared'
+import { Entity, Repository } from '../../shared'
 
 export class PlayerService {
     /**
      * to store the list of players
      */
-    private playersList = new PlayerList()
+
+    private repository: Repository<Player>
+    constructor(repository: Repository<Player>) {
+        this.repository = repository
+    }
 
     /**
      * The function
      * @returns list of type players
      */
     public getPlayers = (): Promise<(Player & Entity)[]> => {
-        return this.playersList.getAll()
+        return this.repository.getAll()
     }
 
     public getOnePlayer = (id: number): Promise<Player & Entity> => {
-        return this.playersList.getOne(id)
+        return this.repository.getOne(id)
     }
 
     /**
@@ -24,8 +28,8 @@ export class PlayerService {
      * @param Player player
      * @returns Player
      */
-    public addPlayer = (player: Player): Promise<number> => {
-        return this.playersList.addOne(player)
+    public addPlayer = (player: Player): Promise<Player & Entity> => {
+        return this.repository.addOne(player)
     }
 
     /**
@@ -33,7 +37,7 @@ export class PlayerService {
      * @param player Player
      */
     public deletePlayer = (id: number): Promise<void> => {
-        return this.playersList.deleteOne(id)
+        return this.repository.deleteOne(id)
     }
 
     /**
@@ -42,6 +46,6 @@ export class PlayerService {
      * @param newPlayer Player
      */
     public updatePlayer = (id: number, player: Player): Promise<void> => {
-        return this.playersList.updateOne(id, player)
+        return this.repository.updateOne(id, player)
     }
 }

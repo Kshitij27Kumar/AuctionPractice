@@ -1,6 +1,6 @@
 import { test, expect, Locator } from '@playwright/test'
 import { Entity, Player } from 'domains'
-const { describe, beforeEach } = test
+const { describe } = test
 
 describe('Players', () => {
     const getRowContent = async (row: Locator) => {
